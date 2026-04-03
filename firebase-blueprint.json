@@ -1,0 +1,84 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "Student profile and overall progress",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string" },
+        "displayName": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "masteryPercentage": { "type": "number" },
+        "weeklyImprovement": { "type": "number" },
+        "weakTopics": { "type": "array", "items": { "type": "string" } },
+        "strongTopics": { "type": "array", "items": { "type": "string" } },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email"]
+    },
+    "Task": {
+      "title": "Task",
+      "description": "Daily task assigned to a student",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "subject": { "type": "string" },
+        "totalQuestions": { "type": "number" },
+        "completedQuestions": { "type": "number" },
+        "isExamMode": { "type": "boolean" },
+        "status": { "type": "string", "enum": ["pending", "in-progress", "completed"] },
+        "questions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "text": { "type": "string" },
+              "correctAnswer": { "type": "string" },
+              "maxMarks": { "type": "number" },
+              "imageUrl": { "type": "string", "format": "uri" }
+            }
+          }
+        },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "subject", "totalQuestions", "completedQuestions", "isExamMode", "status"]
+    },
+    "Attempt": {
+      "title": "Attempt",
+      "description": "A student's attempt at a question",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "taskId": { "type": "string" },
+        "questionId": { "type": "string" },
+        "questionText": { "type": "string" },
+        "studentAnswer": { "type": "string" },
+        "isCorrect": { "type": "boolean" },
+        "marksAwarded": { "type": "number" },
+        "feedback": { "type": "string" },
+        "improvementTip": { "type": "string" },
+        "timeTakenSeconds": { "type": "number" },
+        "suspiciousBehavior": { "type": "boolean" },
+        "antiCheatingLogs": { "type": "array", "items": { "type": "string" } },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "taskId", "questionId", "studentAnswer", "isCorrect", "marksAwarded"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/User" },
+      "description": "Stores user profiles"
+    },
+    "/tasks/{taskId}": {
+      "schema": { "$ref": "#/entities/Task" },
+      "description": "Stores daily tasks"
+    },
+    "/attempts/{attemptId}": {
+      "schema": { "$ref": "#/entities/Attempt" },
+      "description": "Stores question attempts"
+    }
+  }
+}

@@ -1,0 +1,5 @@
+{
+  "name": "IGCSE AI Prep",
+  "description": "An AI-powered IGCSE exam preparation system with adaptive learning, anti-cheating, and a real-time voice tutor.",
+  "requestFramePermissions": ["microphone"]
+}

@@ -1,0 +1,101 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    function isAdmin() {
+      return isAuthenticated() &&
+        (request.auth.token.email == "chitsvafamily@gmail.com" || 
+         (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'));
+    }
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    function isDocOwner() {
+      return isAuthenticated() && request.auth.uid == resource.data.userId;
+    }
+    function uidUnchanged() {
+      return !('userId' in request.resource.data) || request.resource.data.userId == request.auth.uid;
+    }
+    function uidNotModified() {
+      return !('userId' in request.resource.data) || request.resource.data.userId == resource.data.userId;
+    }
+    function hasRequiredFields(fields) {
+      return request.resource.data.keys().hasAll(fields);
+    }
+
+    // ===============================================================
+    // Domain Validators
+    // ===============================================================
+    function isValidUser(data) {
+      return data.uid is string && data.uid.size() > 0 && data.uid.size() < 100 &&
+             data.email is string && data.email.size() > 0 && data.email.size() < 200 &&
+             (!('role' in data) || data.role in ['student', 'admin']) &&
+             (!('masteryPercentage' in data) || data.masteryPercentage is number) &&
+             (!('weeklyImprovement' in data) || data.weeklyImprovement is number) &&
+             (!('weakTopics' in data) || data.weakTopics is list) &&
+             (!('strongTopics' in data) || data.strongTopics is list) &&
+             (!('lastAnalyzed' in data) || data.lastAnalyzed is string);
+    }
+
+    function isValidTask(data) {
+      return data.userId is string && data.userId.size() > 0 && data.userId.size() < 100 &&
+             data.subject is string && data.subject.size() > 0 && data.subject.size() < 100 &&
+             data.totalQuestions is number && data.totalQuestions >= 0 &&
+             data.completedQuestions is number && data.completedQuestions >= 0 &&
+             data.isExamMode is bool &&
+             data.status in ['pending', 'in-progress', 'completed'] &&
+             (!('questions' in data) || data.questions is list);
+    }
+
+    function isValidAttempt(data) {
+      return data.userId is string && data.userId.size() > 0 && data.userId.size() < 100 &&
+             data.taskId is string && data.taskId.size() > 0 && data.taskId.size() < 100 &&
+             data.questionId is string && data.questionId.size() > 0 && data.questionId.size() < 100 &&
+             data.studentAnswer is string && data.studentAnswer.size() >= 0 && data.studentAnswer.size() < 10000 &&
+             data.isCorrect is bool &&
+             data.marksAwarded is number && data.marksAwarded >= 0;
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if isAuthenticated() && hasRequiredFields(['uid', 'email']) && isValidUser(request.resource.data) && ((isOwner(userId) && (!('role' in request.resource.data) || request.resource.data.role == 'student')) || isAdmin());
+      allow update: if isAuthenticated() && isValidUser(request.resource.data) && ((isOwner(userId) && request.resource.data.uid == resource.data.uid && (!('role' in request.resource.data) || request.resource.data.role == resource.data.role)) || isAdmin());
+    }
+
+    match /tasks/{taskId} {
+      allow read: if (isAuthenticated() && resource.data.userId == request.auth.uid) || isAdmin();
+      allow create: if isAuthenticated() && hasRequiredFields(['userId', 'subject', 'totalQuestions', 'completedQuestions', 'isExamMode', 'status']) && isValidTask(request.resource.data) && request.resource.data.userId == request.auth.uid;
+      allow update: if (isAuthenticated() && resource.data.userId == request.auth.uid && isValidTask(request.resource.data) && uidNotModified()) || isAdmin();
+    }
+
+    match /attempts/{attemptId} {
+      allow read: if (isAuthenticated() && resource.data.userId == request.auth.uid) || isAdmin();
+      allow create: if isAuthenticated() && hasRequiredFields(['userId', 'taskId', 'questionId', 'studentAnswer', 'isCorrect', 'marksAwarded']) && isValidAttempt(request.resource.data) && request.resource.data.userId == request.auth.uid;
+      allow update: if (isAuthenticated() && resource.data.userId == request.auth.uid && isValidAttempt(request.resource.data) && uidNotModified()) || isAdmin();
+    }
+    
+    match /settings/{settingId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    match /flashcards/{cardId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    match /questionBank/{questionId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+  }
+}

@@ -1,0 +1,40 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Outfit", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --radius-3xl: 24px;
+  --radius-4xl: 32px;
+  
+  --color-brand-50: #f0f7ff;
+  --color-brand-100: #e0effe;
+  --color-brand-200: #bae0fd;
+  --color-brand-300: #7cc8fb;
+  --color-brand-400: #38a9f8;
+  --color-brand-500: #0e8ce4;
+  --color-brand-600: #026fc7;
+  --color-brand-700: #0358a1;
+  --color-brand-800: #074b85;
+  --color-brand-900: #0c3f6f;
+  --color-brand-950: #082849;
+}
+
+@layer base {
+  body {
+    @apply bg-[#F8F9FC] text-slate-900 antialiased;
+  }
+}
+
+@layer components {
+  .stitch-card {
+    @apply bg-white rounded-3xl border border-slate-100 shadow-[0_2px_12px_-3px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_24px_-6px_rgba(0,0,0,0.08)] transition-all duration-300;
+  }
+  
+  .stitch-button-primary {
+    @apply bg-brand-600 text-white font-semibold px-6 py-3 rounded-2xl hover:bg-brand-700 active:scale-[0.98] transition-all shadow-md hover:shadow-brand-200;
+  }
+
+  .stitch-button-secondary {
+    @apply bg-white text-slate-700 border border-slate-200 font-semibold px-6 py-3 rounded-2xl hover:bg-slate-50 active:scale-[0.98] transition-all;
+  }
+}
